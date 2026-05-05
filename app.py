@@ -22,8 +22,9 @@ class Todo(db.Model):
         return {"id": self.id, "title": self.title, "done": self.done}
 
 
-with app.app_context():
-    db.create_all()
+def create_tables():
+    with app.app_context():
+        db.create_all()
 
 
 @app.route("/")
@@ -66,4 +67,5 @@ def update_todo(todo_id):
 
 
 if __name__ == "__main__":
+    create_tables()
     app.run(host="0.0.0.0", port=5000)
