@@ -1,9 +1,29 @@
+import os
 from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+app.config["JSON_AS_ASCII"] = False 
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-todos = []
-next_id = 1
+db = SQLAlchemy(app)
+
+
+class Todo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    done = db.Column(db.Boolean, default=False)
+
+    def to_dict(self):
+        return {"id": self.id, "title": self.title, "done": self.done}
+
+
+with app.app_context():
+    db.create_all()
 
 
 @app.route("/")
@@ -18,30 +38,31 @@ def health():
 
 @app.route("/todos", methods=["GET"])
 def get_todos():
-    return jsonify(todos)
+    todos = Todo.query.all()
+    return jsonify([t.to_dict() for t in todos])
 
 
 @app.route("/todos", methods=["POST"])
 def create_todo():
-    global next_id
     data = request.get_json()
     if not data or "title" not in data:
         return jsonify({"error": "title is required"}), 400
-    todo = {"id": next_id, "title": data["title"], "done": False}
-    todos.append(todo)
-    next_id += 1
-    return jsonify(todo), 201
+    todo = Todo(title=data["title"])
+    db.session.add(todo)
+    db.session.commit()
+    return jsonify(todo.to_dict()), 201
 
 
 @app.route("/todos/<int:todo_id>", methods=["PATCH"])
 def update_todo(todo_id):
-    todo = next((t for t in todos if t["id"] == todo_id), None)
+    todo = Todo.query.get(todo_id)
     if not todo:
         return jsonify({"error": "not found"}), 404
     data = request.get_json()
     if "done" in data:
-        todo["done"] = data["done"]
-    return jsonify(todo)
+        todo.done = data["done"]
+    db.session.commit()
+    return jsonify(todo.to_dict())
 
 
 if __name__ == "__main__":
