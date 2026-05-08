@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
@@ -27,9 +27,11 @@ def create_tables():
         db.create_all()
 
 
+from flask import Flask, jsonify, request, render_template
+
 @app.route("/")
 def index():
-    return jsonify({"message": "Todo API is running"})
+    return render_template("index.html")
 
 
 @app.route("/health")
@@ -64,6 +66,15 @@ def update_todo(todo_id):
         todo.done = data["done"]
     db.session.commit()
     return jsonify(todo.to_dict())
+
+@app.route("/todos/<int:todo_id>", methods=["DELETE"])
+def delete_todo(todo_id):
+    todo = Todo.query.get(todo_id)
+    if not todo:
+        return jsonify({"error": "not found"}), 404
+    db.session.delete(todo)
+    db.session.commit()
+    return jsonify({"message": "deleted"}), 200
 
 
 if __name__ == "__main__":
