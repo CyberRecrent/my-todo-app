@@ -47,7 +47,7 @@ def get_todos():
 
 @app.route("/todos", methods=["POST"])
 def create_todo():
-    data = request.get_json()
+    data = session.get_json()
     if not data or "title" not in data:
         return jsonify({"error": "title is required"}), 400
     todo = Todo(title=data["title"])
