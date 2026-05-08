@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.config["JSON_AS_ASCII"] = False 
+app.config["JSON_AS_ASCII"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -27,8 +27,6 @@ def create_tables():
         db.create_all()
 
 
-from flask import Flask, jsonify, request, render_template
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -47,7 +45,7 @@ def get_todos():
 
 @app.route("/todos", methods=["POST"])
 def create_todo():
-    data = session.get_json()
+    data = request.get_json()  # было session.get_json()
     if not data or "title" not in data:
         return jsonify({"error": "title is required"}), 400
     todo = Todo(title=data["title"])
@@ -58,7 +56,7 @@ def create_todo():
 
 @app.route("/todos/<int:todo_id>", methods=["PATCH"])
 def update_todo(todo_id):
-    todo = Todo.session.get(todo_id)
+    todo = db.session.get(Todo, todo_id)  # было Todo.session.get()
     if not todo:
         return jsonify({"error": "not found"}), 404
     data = request.get_json()
@@ -67,9 +65,10 @@ def update_todo(todo_id):
     db.session.commit()
     return jsonify(todo.to_dict())
 
+
 @app.route("/todos/<int:todo_id>", methods=["DELETE"])
 def delete_todo(todo_id):
-    todo = Todo.session.get(todo_id)
+    todo = db.session.get(Todo, todo_id)  # было Todo.session.get()
     if not todo:
         return jsonify({"error": "not found"}), 404
     db.session.delete(todo)
