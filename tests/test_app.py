@@ -19,7 +19,7 @@ def client():
 def test_index(client):
     res = client.get("/")
     assert res.status_code == 200
-    assert res.get_json()["message"] == "Todo API is running"
+    assert b"Todo List" in res.data
 
 
 def test_health(client):

@@ -58,7 +58,7 @@ def create_todo():
 
 @app.route("/todos/<int:todo_id>", methods=["PATCH"])
 def update_todo(todo_id):
-    todo = Todo.query.get(todo_id)
+    todo = Todo.session.get(todo_id)
     if not todo:
         return jsonify({"error": "not found"}), 404
     data = request.get_json()
