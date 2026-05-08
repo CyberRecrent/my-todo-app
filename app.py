@@ -69,7 +69,7 @@ def update_todo(todo_id):
 
 @app.route("/todos/<int:todo_id>", methods=["DELETE"])
 def delete_todo(todo_id):
-    todo = Todo.query.get(todo_id)
+    todo = Todo.session.get(todo_id)
     if not todo:
         return jsonify({"error": "not found"}), 404
     db.session.delete(todo)
